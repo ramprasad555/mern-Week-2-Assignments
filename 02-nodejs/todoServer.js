@@ -41,9 +41,98 @@
  */
 const express = require('express');
 const bodyParser = require('body-parser');
-
+const port = 3000;
 const app = express();
 
+var todoarray = [];
 app.use(bodyParser.json());
+
+function create_todo(req, res){
+  var pos = req.body;
+  let id_ = Math.floor((Math.random() * 987654));
+  var newTodoItem ={
+      id : id_ ,
+      title : "title is " + pos.title,
+      description : pos.Description + " " + id_,
+      completed : pos.completed,
+    }
+  todoarray.push(newTodoItem);
+  console.log("new to do item created");
+  res.status(201).send({id: id_});
+}
+
+
+function findbyid(id){
+  for(var i = 0;i< todoarray.length; i++){
+    if(todoarray[i].id == id ){
+      return i; 
+    }
+}
+return "X";
+}
+
+function update_todo(req,res){
+  var id = req.params.id;
+  var reqbody = req.body;
+  var result = findbyid(id);
+  if(result != "X"){
+    for(var keys in reqbody){
+      switch (keys) {
+          case "title":
+            todoarray[result].title = reqbody.title;
+              break;
+          case "Description":
+            todoarray[result].description = reqbody.Description;
+                break;
+          case "completed":
+            todoarray[result].completed = reqbody.completed;
+            break;
+          default:
+            continue;
+      }
+    }
+    res.status(200).send("OK");
+  }
+  else{
+    res.status(404).send({error: 'Not found'});
+  }
+}
+
+function getalltodos(req, res){
+    res.status(200).send(todoarray);
+}
+
+function retrieve_todo(req, res){
+  var id = req.params.id;
+  var result = findbyid(id);
+  if(result != "X"){
+    res.send(todoarray[result]);
+  }
+  else{
+    res.status(404).send({error: 'Not found'});
+  }
+}
+
+function delete_todo(req, res){
+  var id = req.params.id;
+  var result = findbyid(id);
+  todoarray.splice(result,1);
+  res.send("Deleted successfully");
+  console.log(todoarray);
+}
+
+app.get('/todos', getalltodos);  // working
+app.get('/todos/:id', retrieve_todo); //working
+app.post('/todos', create_todo); //working
+app.put('/todos/:id', update_todo); 
+app.delete('/todos/:id', delete_todo); //working
+
+
+
+function started(){
+  console.log(`Todo Server is running on port ${port}`);
+}
+
+app.listen(port, started);
 
 module.exports = app;
