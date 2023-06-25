@@ -30,8 +30,126 @@
  */
 
 const express = require("express")
-const PORT = 3000;
+const port = 3000;
+const bodyParser = require('body-parser');
 const app = express();
 // write your logic here, DONT WRITE app.listen(3000) when you're running tests, the tests will automatically start the server
 
+/*
+var dict = {
+  username: ,
+  password : ,
+  firstname: ,
+  lastname:
+
+}
+*/
+var usersdata = [];
+
+function finduser(username){
+  for(var i = 0; i< usersdata.length; i++){
+    if (usersdata[i].username == username){
+      return i;
+    }
+  }
+  //not found
+  return "X";
+}
+
+function signup(req,res){
+  var given_user_data = req.body;
+  var index_ = finduser(given_user_data.username);
+  if( index_ != "X"){
+    console.log("User already exists");
+    res.status(400).send({message:"Username Already Exists"});
+  }
+  else{
+    let id_ = Math.floor((Math.random() * 987654));
+    var dict = {
+      id : id_,
+      username: given_user_data.username,
+      password : given_user_data.password,
+      firstname: given_user_data.firstname,
+      lastname: given_user_data.lastname
+
+    };
+    usersdata.push(dict);
+    console.log(usersdata);
+    res.status(200).send("created successfully");
+  }
+  
+}
+
+
+function authenticate(username, password){
+  var index_ = finduser(username);
+  if (index_ == "X"){
+    return [0,-1];
+  }
+  else{
+    if(usersdata[index_].username == username && usersdata[index_].password == password){
+      //res.status(200).send(usersdata[index_]);
+      return [1,index_];
+    }
+    else{
+      console.log("invalid credentials");
+      // res.status(401).send("unauthorised");
+      return [-1,-1];
+    }
+  }
+}
+
+function login(req, res){
+  var user = req.body.username;
+  var pass = req.body.password;  
+  var result = authenticate(user, pass);
+  if(result[1] == -1 && result[1] == -1){
+    res.status(403).send('Invalid Credentials');
+  } 
+  else if (result[0] == 1 && result[1] == -1){ 
+    res.status(403)
+  }
+  else{
+    res.status(200).send(usersdata[result[1]]);
+  }
+}
+
+function getalldata(req,res){
+  var user = req.headers.username;
+  var pass = req.headers.password;
+  var result = authenticate(user, pass);
+  if(result[0] == 1){
+    var users =[];
+    for(var i =0;i < usersdata.length; i++){
+      let userone = [];
+      userone.push(usersdata[i].username);
+      userone.push(usersdata[i].id);
+      users.push(userone);
+    }
+    res.status(200).send({"users": users});
+  }
+  else{
+    res.status(401).send("unauthorised");
+  }
+}
+
+
+
+function middleware(req, res, next){
+  console.log("from middleware");
+  res.status(404).send("invalid route")
+}
+
+
+app.use(bodyParser.json());
+app.post('/signup', signup); //working
+app.post('/login',login); //working
+app.get('/data',getalldata); //working
+
+app.use(middleware);
+function started(){
+  console.log(`authentication Server is running on port ${port}`);
+}
+
+app.listen(port, started);
 module.exports = app;
