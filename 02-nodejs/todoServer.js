@@ -121,12 +121,17 @@ function delete_todo(req, res){
   console.log(todoarray);
 }
 
+function middleware(req, res, next){
+  console.log("from middleware");
+  res.status(404).send("invalid route")
+}
+
 app.get('/todos', getalltodos);  // working
 app.get('/todos/:id', retrieve_todo); //working
 app.post('/todos', create_todo); //working
 app.put('/todos/:id', update_todo); 
 app.delete('/todos/:id', delete_todo); //working
-
+app.use(middleware);
 
 
 function started(){
